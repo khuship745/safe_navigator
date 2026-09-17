@@ -2,7 +2,8 @@
 
 [![pub package](https://img.shields.io/pub/v/safe_navigator.svg)](https://pub.dev/packages/safe_navigator)
 
-Prevent double-tap navigation bugs in Flutter — with zero dependencies.
+Prevent double-tap navigation bugs in Flutter — lightweight, with no
+Flutter-framework-replacing dependencies.
 
 Almost every Flutter app has shipped with this bug at some point: a user
 double-taps a button, and it pushes the same screen twice. `safe_navigator`
@@ -18,10 +19,13 @@ onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => Detai
 onPressed: () => SafeNavigator.push(context, MaterialPageRoute(builder: (_) => DetailPage())),
 ```
 
-No dependencies, no code generation, no `Navigator` replacement or routing
-framework migration required. It works alongside `go_router`, `auto_route`,
-or plain `Navigator` — just call `SafeNavigator` instead of `Navigator` at
-the call site you want protected.
+No code generation, no `Navigator` replacement or routing framework
+migration required. Its only dependency is
+[`clock`](https://pub.dev/packages/clock) — a tiny, official Dart-team
+package used internally for testable timing, not a heavy framework. It
+works alongside `go_router`, `auto_route`, or plain `Navigator` — just
+call `SafeNavigator` instead of `Navigator` at the call site you want
+protected.
 
 ## Install
 
@@ -41,13 +45,14 @@ SafeNavigator.push(context, MaterialPageRoute(builder: (_) => NextPage()));
 SafeNavigator.pushNamed(context, '/details');
 SafeNavigator.pushReplacement(context, MaterialPageRoute(builder: (_) => NextPage()));
 SafeNavigator.pushAndRemoveUntil(context, route, (route) => false);
+SafeNavigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+SafeNavigator.popAndPushNamed(context, '/details');
 SafeNavigator.pop(context);
 SafeNavigator.maybePop(context);
+SafeNavigator.popUntil(context, (route) => route.isFirst);
 ```
 
-All calls share a single global cooldown lock (default **800ms**), so a
-rapid double-tap on *any* navigation action in your app is ignored on the
-second tap.
+Pushes and pops use independent cooldown locks (default 500ms each), so popping right after pushing is never blocked.
 
 Adjust the cooldown once at startup if needed:
 
@@ -66,8 +71,8 @@ navigation — form submits, "Add to cart", API calls, etc.
 ```dart
 SafeButton(
   onTap: () => submitForm(),
-  child: ElevatedButton(
-    onPressed: null, // required: let SafeButton handle the tap
+  builder: (context, onSafeTap) => ElevatedButton(
+    onPressed: onSafeTap,
     child: const Text('Submit'),
   ),
 )
@@ -80,14 +85,14 @@ SafeButton(
 SafeButton(
   onTap: () => addToCart(item),
   cooldown: const Duration(milliseconds: 1000),
-  child: ElevatedButton(onPressed: null, child: const Text('Add to cart')),
+  builder: (context, onSafeTap) => ElevatedButton(
+    onPressed: onSafeTap,
+    child: const Text('Add to cart'),
+  ),
 )
 ```
 
-> **Note:** always set the wrapped button's `onPressed` to `null` (or a
-> no-op). `SafeButton` handles the tap via its own `GestureDetector` —
-> leaving `onPressed` active would fire the action on every tap, bypassing
-> the debounce.
+> Note: Pass onSafeTap directly to your button's onPressed or onTap. This preserves the button's native ripple effect and styling while debouncing taps.
 
 ## How it works
 
@@ -104,7 +109,8 @@ No. Use it alongside them — wrap the specific `context.go(...)` /
 want the same protection with those routers.
 
 **Will this ever block a legitimate second navigation?**
-Only if two navigation actions are genuinely fired within the cooldown
-window (default 800ms). That's intentional — that's the exact scenario
-this package exists to catch. Lower `cooldown` if 800ms feels too
+Only if two navigation actions of the same type (both pushes, or both
+pops) are genuinely fired within the cooldown window (default 500ms
+each). That's intentional — that's the exact scenario this package exists
+to catch. Lower `pushCooldown`/`popCooldown` if 500ms feels too
 aggressive for your UX.

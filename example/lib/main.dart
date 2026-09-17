@@ -71,8 +71,8 @@ class HomePage extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => const DetailPage()),
                 );
               },
-              child: ElevatedButton(
-                onPressed: null,
+              builder: (context, onSafeTap) => ElevatedButton(
+                onPressed: onSafeTap,
                 child: const Text('Push with SafeButton wrapper'),
               ),
             ),

@@ -19,8 +19,41 @@ void main() {
                 SafeNavigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const Scaffold(
-                      body: Text('Second Page'),
+                    builder: (_) => const Scaffold(body: Text('Second Page')),
+                  ),
+                );
+              },
+              child: const Text('Go'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Go'));
+    await tester.tap(find.text('Go'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Second Page'), findsOneWidget);
+  });
+
+  testWidgets(
+      'SafeNavigator.pop right after push is not blocked by push cooldown',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: ElevatedButton(
+              onPressed: () {
+                SafeNavigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (innerContext) => Scaffold(
+                      body: ElevatedButton(
+                        onPressed: () => SafeNavigator.pop(innerContext),
+                        child: const Text('Back'),
+                      ),
                     ),
                   ),
                 );
@@ -32,17 +65,17 @@ void main() {
       ),
     );
 
-    // Simulate two rapid taps.
-    await tester.tap(find.text('Go'));
     await tester.tap(find.text('Go'));
     await tester.pumpAndSettle();
 
-    // Only one 'Second Page' should exist — not stacked twice.
-    expect(find.text('Second Page'), findsOneWidget);
+    await tester.tap(find.text('Back'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Go'), findsOneWidget);
+    expect(find.text('Back'), findsNothing);
   });
 
-  testWidgets('SafeButton ignores second tap within cooldown',
-      (tester) async {
+  testWidgets('SafeButton ignores second tap within cooldown', (tester) async {
     int tapCount = 0;
 
     await tester.pumpWidget(
@@ -51,9 +84,9 @@ void main() {
           body: SafeButton(
             onTap: () => tapCount++,
             cooldown: const Duration(milliseconds: 500),
-            child: const ElevatedButton(
-              onPressed: null,
-              child: Text('Tap me'),
+            builder: (context, onSafeTap) => ElevatedButton(
+              onPressed: onSafeTap,
+              child: const Text('Tap me'),
             ),
           ),
         ),
@@ -77,9 +110,9 @@ void main() {
           body: SafeButton(
             onTap: () => tapCount++,
             cooldown: const Duration(milliseconds: 100),
-            child: const ElevatedButton(
-              onPressed: null,
-              child: Text('Tap me'),
+            builder: (context, onSafeTap) => ElevatedButton(
+              onPressed: onSafeTap,
+              child: const Text('Tap me'),
             ),
           ),
         ),
@@ -92,5 +125,25 @@ void main() {
     await tester.pump();
 
     expect(tapCount, 2);
+  });
+
+  testWidgets('SafeButton keeps the button visually enabled (has onPressed)',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SafeButton(
+            onTap: () {},
+            builder: (context, onSafeTap) => ElevatedButton(
+              onPressed: onSafeTap,
+              child: const Text('Tap me'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+    expect(button.onPressed, isNotNull);
   });
 }

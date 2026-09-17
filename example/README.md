@@ -1,17 +1,16 @@
-# safe_navigator_example
+# safe_navigator example
 
-A new Flutter project.
+Demonstrates `safe_navigator`'s three ways to prevent double-tap navigation bugs:
 
-## Getting Started
+1. **Unsafe (buggy)** — plain `Navigator.push`, shown for comparison. Rapid-tapping this can push the Detail Page multiple times.
+2. **`SafeNavigator.push`** — drop-in replacement for `Navigator` static methods.
+3. **`SafeButton`** — wraps any button and debounces its tap, without disabling its ripple/enabled styling.
 
-This project is a starting point for a Flutter application.
+## Run it
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+flutter pub get
+flutter run
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+See the main package README for full usage docs: [../README.md](../README.md)

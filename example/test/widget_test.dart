@@ -1,30 +1,41 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:safe_navigator/safe_navigator.dart';
 import 'package:safe_navigator_example/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  setUp(() {
+    // Without this, SafeNavigator's push cooldown from one test can still
+    // be active when the next test starts, silently blocking its push.
+    SafeNavigator.reset();
+  });
+
+  testWidgets('Home page shows all three demo buttons', (tester) async {
     await tester.pumpWidget(const MyApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Push WITHOUT protection (buggy)'), findsOneWidget);
+    expect(find.text('Push with SafeNavigator'), findsOneWidget);
+    expect(find.text('Push with SafeButton wrapper'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('SafeNavigator button navigates to Detail Page', (tester) async {
+    await tester.pumpWidget(const MyApp());
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.tap(find.text('Push with SafeNavigator'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Detail Page'), findsOneWidget);
+    expect(find.text('Go back safely'), findsOneWidget);
+  });
+
+  testWidgets('Detail Page pops back to Home', (tester) async {
+    await tester.pumpWidget(const MyApp());
+
+    await tester.tap(find.text('Push with SafeNavigator'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Go back safely'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('safe_navigator demo'), findsOneWidget);
   });
 }
