@@ -1,0 +1,33 @@
+# Package-level ignores (this is a library, not an app)
+.dart_tool/
+.packages
+build/
+pubspec.lock
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Flutter/Dart tooling
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+
+# Example app build artifacts (keep example/pubspec.lock if you want,
+# but its build output should never be committed)
+example/build/
+example/.dart_tool/
+example/android/.gradle/
+example/ios/Pods/
+example/ios/.symlinks/
+example/ios/Flutter/Flutter.framework
+example/ios/Flutter/Flutter.podspec
+example/windows/flutter/ephemeral/
+example/web/
